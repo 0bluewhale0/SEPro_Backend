@@ -1,0 +1,19 @@
+{
+    "db": {
+      "host": "",
+      "port": 3306,
+      "user": "",
+      "password": "",
+      "db": ""
+    },
+    "JWT": {
+      "secret": "this is secrect"
+    },
+    "cfg": {
+      "FastChargingPileNum": 3,
+      "TrickleChargingPileNum": 2,
+      "WaitingAreaSize": 6,
+      "ChargingQueueLen":2
+    },
+    "SpeedupRatio":60
+}
