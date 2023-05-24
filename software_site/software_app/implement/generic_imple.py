@@ -6,7 +6,7 @@ FilePath: \backEnd\software_site\software_app\implement\generic_imple.py
 '''
 from django.http import HttpRequest, JsonResponse
 from django.db import transaction
-from software_app.servive.jwt import RequestContext
+from software_app.service.jwt_tools import RequestContext
 
 # /register 注册发送的json格式
 __register_schema__ = {

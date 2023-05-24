@@ -1,9 +1,3 @@
-'''
-Date: 2023-05-23 20:52:34
-LastEditors: ShanZhihan
-LastEditTime: 2023-05-23 20:52:37
-FilePath: \backEnd\software_site\software_app\util\jwt_tools.py
-'''
 """JWT工具箱"""
 import functools
 
@@ -13,7 +7,7 @@ from typing import Callable
 from jwt import encode, decode, DecodeError
 from django.http import HttpRequest, JsonResponse
 
-from acss_app.controller.util.resp_tool import RetCode
+from software_app.implement.util.resp_tool import RetCode
 
 
 class Role(Enum):
@@ -36,8 +30,9 @@ def gen_token(username: str, role: str) -> str:
     return token
 
 
+# 鉴权
 def preprocess_token(
-    limited_role: Role
+        limited_role: Role
 ) -> Callable:
     def decorator(request_handler: Callable[[RequestContext, HttpRequest], JsonResponse]):
         @functools.wraps(request_handler)
@@ -66,5 +61,7 @@ def preprocess_token(
             context = RequestContext(username, role)
             response: JsonResponse = request_handler(context, request)
             return response
+
         return wrapper
+
     return decorator
