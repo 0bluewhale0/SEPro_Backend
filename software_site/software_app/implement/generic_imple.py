@@ -1,12 +1,17 @@
 '''
 Date: 2023-05-23 17:55:05
 LastEditors: ShanZhihan
-LastEditTime: 2023-05-23 21:44:01
-FilePath: \backEnd\software_site\software_app\implement\generic_imple.py
+LastEditTime: 2023-05-24 22:51:29
+FilePath: \software_site\software_app\implement\generic_imple.py
 '''
 from django.http import HttpRequest, JsonResponse
 from django.db import transaction
 from software_app.service.jwt_tools import RequestContext
+from software_app.implement.util.validator import validate, ValidationError
+from software_app.service.jwt_tools import RequestContext, preprocess_token, Role, RetCode
+from software_app.service.exceptions import UserAlreadyExisted, UserDoesNotExisted
+from software_app.service.auth import register, login
+from software_app.service.timemock import get_datetime_now, get_timestamp_now
 
 # /register 注册发送的json格式
 __register_schema__ = {
@@ -62,11 +67,87 @@ __login_schema__ = {
 }
 
 
-def register_api(_: RequestContext, req: HttpRequest) -> JsonResponse:
-    pass
+def register_api(req: HttpRequest) -> JsonResponse:
+    try:
+        loads = validate(req, schema=__register_schema__)
+    except ValidationError as e:
+        return JsonResponse({
+            'code': RetCode.FAIL.value,
+            'message': str(e),
+            'data':{}
+        })
+    username = loads['username']
+    password = loads['password']
+    key = loads['key']
+    try:
+        register(username, password, key)
+    except UserAlreadyExisted as e:
+        return JsonResponse({
+            'code': RetCode.FAIL.value,
+            'message': str(e),
+            'data':{}
+        })
 
-def login_api(_: RequestContext, req: HttpRequest) -> JsonResponse:
-    pass
+    return JsonResponse({
+        'code': RetCode.SUCCESS.value,
+        'message': 'success',
+        'data':{}
+    })
 
-def query_time(_: RequestContext, req: HttpRequest) -> JsonResponse:
-    pass
+
+def login_api(req: HttpRequest) -> JsonResponse:
+    try:
+        loads = validate(req, schema=__login_schema__)
+    except ValidationError as e:
+        return JsonResponse({
+            'code': RetCode.FAIL.value,
+            'message': str(e)
+        })
+    username = loads['username']
+    password = loads['password']
+    try:
+        token, role = login(username, password)
+    except UserDoesNotExisted as e:
+        return JsonResponse({
+            'code': RetCode.FAIL.value,
+            'message': str(e),
+            'data':{}
+        })
+    except WrongPassword as e:
+        return JsonResponse({
+            'code': RetCode.FAIL.value,
+            'message': str(e),
+            'data':{}
+        })
+
+    is_admin = False
+    if role == Role.ADMIN:
+        is_admin = True
+
+    return JsonResponse({
+        'code': RetCode.SUCCESS.value,
+        'message': 'success',
+        'data': {
+            'token': token,
+            "is_admin": is_admin
+        }
+    })
+
+
+def query_time(req: HttpRequest) -> JsonResponse:
+    try:
+        validate(req, method='GET')
+    except ValidationError as e:
+        return JsonResponse({
+            'code': RetCode.FAIL.value,
+            'message': str(e)
+        })
+
+    return JsonResponse({
+        'code': RetCode.SUCCESS.value,
+        'message': 'success',
+        'data': {
+            'datetime': get_datetime_now(),
+            'timestamp': get_timestamp_now()
+        }
+    })

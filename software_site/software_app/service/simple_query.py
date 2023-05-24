@@ -36,11 +36,11 @@ def get_all_piles_status() -> List[Dict[str, Any]]:
     piles: QuerySet[Pile] = Pile.objects.all()
     for pile in piles:
         pile_status = {
-            'pile_id': str(pile.pile_id),
+            'chargingPileId': pile.pile_id,
             'status': PileStatus(pile.status).name,
-            'cumulative_usage_times': pile.cumulative_usage_times,
-            'cumulative_charging_time': pile.cumulative_charging_time,
-            'cumulative_charging_amount': pile.cumulative_charging_amount
+            'cumulativeUsageTimes': pile.cumulative_usage_times,
+            'cumulativeChargingTime': pile.cumulative_charging_time,
+            'cumulativeChargingAmount': pile.cumulative_charging_amount
         }
         status_list.append(pile_status)
     return status_list
@@ -73,26 +73,26 @@ def query_report() -> List[Dict[str, Any]]:
                   cumulative_service_earning=Sum('order__service_cost'),
                   cumulative_earning=Sum('order__total_cost'))
     for pile in piles:
-        cumulative_charging_earning = Decimal('0.00')
-        cumulative_service_earning =  Decimal('0.00')
-        cumulative_earning = Decimal('0.00')
+        cumulative_charging_fee = Decimal('0.00')
+        cumulative_service_fee =  Decimal('0.00')
+        cumulative_fee = Decimal('0.00')
         if pile.cumulative_charging_earning is not None:
-            cumulative_charging_earning = pile.cumulative_charging_earning.quantize(Decimal('0.00'))
+            cumulative_charging_fee = pile.cumulative_charging_earning.quantize(Decimal('0.00'))
         if pile.cumulative_service_earning is not None:
-            cumulative_service_earning = pile.cumulative_service_earning.quantize(Decimal('0.00'))
+            cumulative_service_fee = pile.cumulative_service_earning.quantize(Decimal('0.00'))
         if pile.cumulative_earning is not None:
-            cumulative_earning = pile.cumulative_earning.quantize(Decimal('0.00'))
+            cumulative_fee = pile.cumulative_earning.quantize(Decimal('0.00'))
         pile_status = {
-            'pile_id': str(pile.pile_id),
             'day': (date.today() - pile.register_time).days,
             'week': (date.today() - pile.register_time).days // 7,
             'month': date.today().month - pile.register_time.month,
-            'cumulative_usage_times': pile.cumulative_usage_times,
-            'cumulative_charging_time': pile.cumulative_charging_time,
-            'cumulative_charging_amount': pile.cumulative_charging_amount,
-            'cumulative_charging_earning': cumulative_charging_earning,
-            'cumulative_service_earning': cumulative_service_earning,
-            'cumulative_earning': cumulative_earning
+            'chargingPileId': pile.pile_id,
+            'cumulativeUsageTimes': pile.cumulative_usage_times,
+            'cumulativeChargingTime': pile.cumulative_charging_time,
+            'cumulativeChargingAmount': pile.cumulative_charging_amount,
+            'cumulativeChargingFee': cumulative_charging_fee,
+            'cumulativeServiceFee': cumulative_service_fee,
+            'cumulativeFee': cumulative_fee
         }
         status_list.append(pile_status)
     return status_list

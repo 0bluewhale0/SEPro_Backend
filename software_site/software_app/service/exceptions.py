@@ -1,41 +1,20 @@
 """exceptions"""
 
 
-class ServiceError(BaseException):
-    pass
+class ServiceError(BaseException):...
 
+class UserDoesNotExisted(ServiceError):...
 
-class UserDoesNotExisted(ServiceError):
-    pass
+class UserAlreadyExisted(ServiceError):...
 
+class PileDoesNotExisted(ServiceError):...
 
-class UserAlreadyExisted(ServiceError):
-    pass
+class IllegalUpdateAttemption(ServiceError):...
 
+class OutOfRecycleResource(ServiceError):...
 
-class WrongPassword(ServiceError):
-    pass
+class OutOfSpace(ServiceError):...
 
+class AlreadyRequested(ServiceError):...
 
-class PileDoesNotExisted(ServiceError):
-    pass
-
-
-class IllegalUpdateAttemption(ServiceError):
-    pass
-
-
-class OutOfRecycleResource(ServiceError):
-    pass
-
-
-class OutOfSpace(ServiceError):
-    pass
-
-
-class AlreadyRequested(ServiceError):
-    pass
-
-
-class MappingNotExisted(ServiceError):
-    pass
+class MappingNotExisted(ServiceError):...

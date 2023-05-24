@@ -7,8 +7,10 @@
       "db": ""
     },
     "JWT": {
-      "secret": "this is secrect"
+      "secret": "this is secrect",
+      "algorithm": "HS256"
     },
+    "AuthCode":["asfdghkj"],
     "cfg": {
       "FastChargingPileNum": 3,
       "TrickleChargingPileNum": 2,

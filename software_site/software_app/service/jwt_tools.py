@@ -8,7 +8,7 @@ from jwt import encode, decode, DecodeError
 from django.http import HttpRequest, JsonResponse
 
 from software_app.implement.util.resp_tool import RetCode
-
+from software_app.config import CONFIG
 
 class Role(Enum):
     USER = 0
@@ -26,7 +26,8 @@ def gen_token(username: str, role: str) -> str:
         'username': username,
         'role': role
     }
-    token = encode(payload, 'top-secret', algorithm='HS256')
+    token = encode(payload, CONFIG['JWT']['secret'], algorithm=CONFIG['JWT']['algorithm'])
+    # return token.decode('utf-8')
     return token
 
 
@@ -45,7 +46,7 @@ def preprocess_token(
                 })
             try:
                 token = token.removeprefix('Bearer ')
-                payload = decode(token, 'top-secret', algorithms=['HS256'])
+                payload = decode(token, CONFIG['JWT']['secret'], algorithms=['HS256'])
             except DecodeError:
                 return JsonResponse({
                     'code': RetCode.FAIL.value,

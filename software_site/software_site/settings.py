@@ -25,10 +25,10 @@ SECRET_KEY = 'django-insecure-_3=7)+*lqbv&+eeu0+)^^yhik$$0i4*(us2#220r%=1gj*!_yc
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['https://apifox.com', 'localhost', '127.0.0.1']
 
 
-# Application definition
+# Application definitionhttps://apifox.com
 
 INSTALLED_APPS = [
     'django.contrib.admin',
@@ -37,14 +37,15 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'software_app.apps.SoftwareAppConfig'
+    # 'software_app.apps.SoftwareAppConfig'
+    'software_app'
 ]
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
-    'django.middleware.csrf.CsrfViewMiddleware',
+    # 'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',

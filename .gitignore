@@ -2,7 +2,8 @@
 __pycache__/
 *.py[cod]
 *$py.class
-
+# 我自己的运行脚本
+*.bat
 # C extensions
 *.so
 

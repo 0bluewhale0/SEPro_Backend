@@ -501,11 +501,11 @@ class Scheduler:
         request_list = []
         for request in self.__waiting_area_map.values():
             request_info = {
-                'pile_id': str(request.pile_id),
+                'chargingPileId': request.pile_id,
                 'username': request.username,
-                'battery_size': request.battery_capacity,
-                'require_amount': request.amount,
-                'waiting_time': (get_datetime_now() - request.create_time).seconds
+                'requireAmount': request.amount,
+                'batteryAmount': request.battery_capacity,
+                'waitingTime': (get_datetime_now() - request.create_time).seconds
             }
             request_list.append(request_info)
         return request_list
@@ -526,7 +526,7 @@ def on_init() -> None:
     scheduler = Scheduler()
     # for i in range(1, 14):
     #     scheduler.submit_request(PileType.CHARGE, f'user{i:02d}', Decimal('15.00'), Decimal('65.50'))
-    #
+    
     # for i in range(15, 31):
     #     scheduler.submit_request(PileType.FAST_CHARGE, f'user{i:02d}', Decimal('15.00'), Decimal('65.50'))
 

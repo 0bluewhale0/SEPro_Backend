@@ -1,9 +1,3 @@
-'''
-Date: 2023-05-23 16:53:00
-LastEditors: ShanZhihan
-LastEditTime: 2023-05-23 23:38:16
-FilePath: \backEnd\software_site\software_app\models.py
-'''
 from django.db import models
 
 # Create your models here.
