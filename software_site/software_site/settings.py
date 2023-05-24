@@ -81,10 +81,10 @@ DATABASES = {
     # }
         'default': {
         'ENGINE': 'django.db.backends.mysql',  # 数据库引擎
-        'NAME': 'chargingDB',  # 数据库名字
-        'USER': 'root',     # 账号
-        'PASSWORD': 'Szh20020411??',   # 密码
-        'HOST': 'localhost',  # HOST
+        'NAME': 'softwareDB',  # 数据库名字
+        'USER': 'ShanZhihan',     # 账号
+        'PASSWORD': 'softwareWork1!',   # 密码
+        'HOST': '101.42.40.112',  # HOST
         'PORT': 3306,
     }
 }
