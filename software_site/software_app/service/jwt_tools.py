@@ -8,6 +8,7 @@ from jwt import encode, decode, DecodeError
 from django.http import HttpRequest, JsonResponse
 
 from software_app.implement.util.resp_tool import RetCode
+from software_app.config import CONFIG
 
 
 class Role(Enum):
@@ -26,7 +27,8 @@ def gen_token(username: str, role: str) -> str:
         'username': username,
         'role': role
     }
-    token = encode(payload, 'top-secret', algorithm='HS256')
+    token = encode(payload, CONFIG['JWT']['secret'], algorithm=CONFIG['JWT']['algorithm'])
+    # return token.decode('utf-8')
     return token
 
 
@@ -45,18 +47,23 @@ def preprocess_token(
                 })
             try:
                 token = token.removeprefix('Bearer ')
-                payload = decode(token, 'top-secret', algorithms=['HS256'])
+                print(token)
+                # payload = decode(token, CONFIG['JWT']['secret'], algorithms=CONFIG['JWT']["algorithm"])
+                payload = decode(token, "this is secrect", algorithms="HS256")
+                print(payload)
             except DecodeError:
                 return JsonResponse({
                     'code': RetCode.FAIL.value,
-                    'message': 'JWT损坏'
+                    'message': 'JWT损坏',
+                    "data": {}
                 })
             username = payload['username']
             role = Role[payload['role']]
             if role != limited_role:
                 return JsonResponse({
                     'code': RetCode.FAIL.value,
-                    'message': '无权限'
+                    'message': '无权限',
+                    "data": {}
                 })
             context = RequestContext(username, role)
             response: JsonResponse = request_handler(context, request)
