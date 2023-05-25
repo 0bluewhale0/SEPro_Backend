@@ -17,6 +17,8 @@ def validate(request: HttpRequest, method: str = 'POST', schema: Dict = None) ->
         raise ValidationError(f"请使用{method}请求")
     if method == 'GET':
         return
+    if schema is None:
+        return
     try:
         req = json.loads(request.body)
         _validate(req, schema)

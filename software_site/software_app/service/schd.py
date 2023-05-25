@@ -8,10 +8,11 @@ from threading import Lock
 import threading
 from time import sleep
 from typing import Any, Dict, List, Tuple
+from software_app.config import CONFIG
 
 from django.db.models import QuerySet
 
-from software_app.models import Pile, PileType
+from software_app.models import Pile, PileType, Order
 from software_app.service.charge import create_order
 from software_app.service.timemock import get_datetime_now
 from software_app.service.exceptions import AlreadyRequested, IllegalUpdateAttemption, MappingNotExisted, \
@@ -19,8 +20,8 @@ from software_app.service.exceptions import AlreadyRequested, IllegalUpdateAttem
 
 MAX_RECYCLE_ID = 1000
 
-WAITING_AREA_CAPACITY = 15
-WAITING_QUEUE_CAPACITY = 3
+WAITING_AREA_CAPACITY = CONFIG["cfg"]["WaitingAreaSize"]
+WAITING_QUEUE_CAPACITY = CONFIG["cfg"]["ChargingQueueLen"]
 
 NORMAL_PILE_POWER = 10.00
 FAST_CHARGE_PILE_POWER = 30.00
@@ -184,6 +185,7 @@ class Scheduler:
     """
 
     def __init__(self) -> None:
+        self.__cache:Dict[str,Order] = {} #用于缓存已经结束的订单，便于前端用户点击结束充电后返回:键值为用户名
         self.__id_allocator = _RequestIdAllocator()
         self.__lock = Lock()
         self.__check_lock = Lock()
@@ -197,13 +199,14 @@ class Scheduler:
             PileType.CHARGE: [[], 0],
             PileType.FAST_CHARGE: [[], 0]
         }
+        
 
         __piles: QuerySet[Pile] = Pile.objects.all()
         for pile in __piles:
             self.__pile_schedulers[pile.pile_id] = PileScheduler(
                 pile.pile_type)
 
-        threading.Thread(target=self.__check_proc).start()
+        # threading.Thread(target=self.__check_proc).start()
 
     @classmethod
     def __pop_queue(cls, queue: Tuple[List[_ChargingRequest], int]) -> _ChargingRequest | None:
@@ -238,6 +241,13 @@ class Scheduler:
             fastest_pile = pile_id
             shortest_time = cost
         return fastest_pile
+
+    def checkCache(self,name:str) -> None|Order:
+        if name in self.__cache:
+            order : Order = self.__cache[name]
+            self.__cache.pop(name)
+            return order
+        return None
 
     def __try_schedule(self) -> None:
         def schedule_on_type(pile_type: PileType) -> None:
@@ -312,7 +322,7 @@ class Scheduler:
                         self.end_request(executing_request.request_id)
             sleep(1)
 
-    def end_request(self, request_id: int) -> None:
+    def end_request(self, request_id: int, return_order: bool = False) -> None | Order:
         with self.__lock:
             request = self.__waiting_area_map.pop(request_id)
             request.is_removed = True
@@ -331,17 +341,22 @@ class Scheduler:
                           request.request_id)
                 # 触发结算流程生成详单
                 debug("[scheduler] request %d created an order.", request_id)
-                create_order(request.request_type,
-                             request.pile_id,
-                             request.username,
-                             request.amount,
-                             request.create_time,
-                             end_time=get_datetime_now())
+                order: Order = create_order(request.request_type,
+                                            request.pile_id,
+                                            request.username,
+                                            request.amount,
+                                            request.create_time,
+                                            end_time=get_datetime_now(),
+                                            returned_order=True)
+                self.__cache[request.username] = order
             else:
                 debug("[scheduler] request %d is cancelled.", request_id)
 
             # pile_scheduler 有空位 触发调度流程
             self.__try_schedule()
+
+            if return_order:
+                return order
 
     def update_request(self, request_id: int, amount: Decimal, request_type: PileType) -> None:
         with self.__lock:
@@ -368,6 +383,8 @@ class Scheduler:
                        requeue: bool = False) -> None:
         with self.__lock:
             if username in self.__username_to_request_id:
+                raise AlreadyRequested("已存在用户请求")
+            if username in self.__cache:
                 raise AlreadyRequested("已存在用户请求")
 
             used_size = sum(q[1] for q in self.__waiting_areas.values())
@@ -509,6 +526,21 @@ class Scheduler:
             }
             request_list.append(request_info)
         return request_list
+
+    def query_left_amount(self, request_id) -> Decimal:
+        with self.__lock:
+            if request_id in self.__waiting_area_map:
+                cur_request = self.__waiting_area_map[request_id]
+                if cur_request.is_executing:
+                    peried = (get_datetime_now() - cur_request.begin_time).total_seconds() / 3600
+                    if cur_request.request_type == PileType.CHARGE:  # 普通充电桩
+                        res = cur_request.battery_capacity - Decimal.from_float(peried * NORMAL_PILE_POWER)
+                    else:  # 快速充电桩
+                        res = cur_request.battery_capacity - Decimal.from_float(peried * FAST_CHARGE_PILE_POWER)
+                else:
+                    res = cur_request.battery_capacity
+            res = max(res, 0.0)
+        return res
 
 
 scheduler: Scheduler = None

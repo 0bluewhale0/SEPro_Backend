@@ -3,7 +3,6 @@ from django.urls import path
 
 import software_app.implement.charging_imple as charging_imple
 
-
 urlpatterns = [
-    path('charging', charging_imple.report_api),
+    path('charging', charging_imple.report_api),  # ok
 ]

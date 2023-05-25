@@ -10,11 +10,11 @@ __boot_datetime = datetime.now()
 __boot_timestamp = round(time.time())
 
 
-def reset_time() -> None:
-    global __boot_datetime
-    global __boot_timestamp
-    __boot_datetime = datetime.now()
-    __boot_timestamp = round(time.time())
+# def reset_time() -> None:
+#     global __boot_datetime
+#     global __boot_timestamp
+#     __boot_datetime = datetime.now()
+#     __boot_timestamp = round(time.time())
 
 
 def get_timestamp_now() -> int:

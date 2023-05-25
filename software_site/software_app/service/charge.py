@@ -123,7 +123,8 @@ def create_order(request_type: PileType,
                  username: str,
                  amount: Decimal,
                  begin_time: datetime,
-                 end_time: datetime) -> None:
+                 end_time: datetime,
+                 returned_order : bool = False) -> None | Order:
     """生成详单
 
     使用 Django ORM 生成一条详单记录，详单的 create_time 字段
@@ -163,6 +164,9 @@ def create_order(request_type: PileType,
     pile.cumulative_charging_time += order.charged_time
     pile.cumulative_usage_times += 1
     pile.save()
+
+    if returned_order:
+        return order
 
 
 if __name__ == '__main__':

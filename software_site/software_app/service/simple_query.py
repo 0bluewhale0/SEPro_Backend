@@ -9,23 +9,26 @@ from django.core.exceptions import ObjectDoesNotExist
 
 from software_app.models import Order, Pile, PileStatus
 from software_app.service.exceptions import PileDoesNotExisted
+from software_app.service.timemock import get_timestamp_now
 
 
 def get_all_orders(username: str) -> List[Dict[str, Any]]:
     order_list = []
-    orders: QuerySet[Order] = Order.objects.filter(user__username=username)
+    orders: QuerySet[Order] = OrderOrder.objects.filter(user__username=username)
     for order in orders:
         order_info = {
-            'order_id': str(order.order_id),
-            'create_time': str(order.create_time),
-            'charged_amount': order.charged_amount,
-            'charged_time': order.charged_time,
-            'begin_time': str(order.begin_time),
-            'end_time': str(order.end_time),
-            'charging_cost': order.charging_cost,
-            'service_cost': order.service_cost,
-            'total_cost': order.total_cost,
-            'pile_id': str(order.pile_id)
+            "userId": int(order.order_id),
+            "orderId": str(order.order_id),
+            "createTime":str(order.create_time),
+            "chargingPileId": int(order.pile_id),
+            "volume": round(order.charged_amount,2),
+            "chargingTime":int(order.charged_time),
+            "startTime": str(order.begin_time),
+            "endTime": str(order.end_time),
+            "chargingFee": round(order.charging_cost,2),
+            "serviceFee": round(order.service_cost,2),
+            "totalFee": round(order.total_cost,2),
+            "time": str(get_timestamp_now())
         }
         order_list.append(order_info)
     return order_list
