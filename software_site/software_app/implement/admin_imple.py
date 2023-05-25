@@ -1,7 +1,7 @@
 '''
 Date: 2023-05-23 17:55:05
 LastEditors: ShanZhihan
-LastEditTime: 2023-05-24 22:57:31
+LastEditTime: 2023-05-24 23:21:27
 FilePath: \software_site\software_app\implement\admin_imple.py
 '''
 from django.http import HttpRequest, JsonResponse
@@ -36,9 +36,9 @@ __update_pile_schema__ = {
 }
 
 # 更新充电桩状态
-# @preprocess_token(limited_role=Role.ADMIN)
-# def update_pile_api(_: RequestContext, req: HttpRequest) -> JsonResponse:
-def update_pile_api( req: HttpRequest) -> JsonResponse:
+@preprocess_token(limited_role=Role.ADMIN)
+def update_pile_api(_: RequestContext, req: HttpRequest) -> JsonResponse:
+# def update_pile_api( req: HttpRequest) -> JsonResponse:
     # print("req", req)
     try:
         loads = validate(req, method='PUT', schema=__update_pile_schema__)
@@ -78,9 +78,9 @@ def update_pile_api( req: HttpRequest) -> JsonResponse:
 
 
 # 查看报表
-# @preprocess_token(limited_role=Role.ADMIN)
-# def query_report_api(_: RequestContext, req: HttpRequest) -> JsonResponse:
-def query_report_api(req: HttpRequest) -> JsonResponse:
+@preprocess_token(limited_role=Role.ADMIN)
+def query_report_api(_: RequestContext, req: HttpRequest) -> JsonResponse:
+# def query_report_api(req: HttpRequest) -> JsonResponse:
     try:
         validate(req, method='GET')
     except ValidationError as e:
@@ -99,10 +99,9 @@ def query_report_api(req: HttpRequest) -> JsonResponse:
 
 
 # 查看所有充电桩状态
-# @preprocess_token(limited_role=Role.ADMIN)
-# def query_all_piles_stat_api(_: RequestContext, req: HttpRequest) -> JsonResponse:
-#     pass
-def query_all_piles_stat_api(req: HttpRequest) -> JsonResponse:
+@preprocess_token(limited_role=Role.ADMIN)
+def query_all_piles_stat_api(_: RequestContext, req: HttpRequest) -> JsonResponse:
+# def query_all_piles_stat_api(req: HttpRequest) -> JsonResponse:
     try:
         validate(req, method='GET')
     except ValidationError as e:
@@ -122,9 +121,9 @@ def query_all_piles_stat_api(req: HttpRequest) -> JsonResponse:
 
 
 # 查看总体排队情况
-# @preprocess_token(limited_role=Role.ADMIN)
-# def query_queue_api(_: RequestContext, req: HttpRequest) -> JsonResponse:
-def query_queue_api(req: HttpRequest) -> JsonResponse:
+@preprocess_token(limited_role=Role.ADMIN)
+def query_queue_api(_: RequestContext, req: HttpRequest) -> JsonResponse:
+# def query_queue_api(req: HttpRequest) -> JsonResponse:
     try:
         validate(req, method='GET')
     except ValidationError as e:
