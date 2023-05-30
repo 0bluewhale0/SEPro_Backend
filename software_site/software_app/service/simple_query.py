@@ -14,7 +14,7 @@ from software_app.service.timemock import get_timestamp_now
 
 def get_all_orders(username: str) -> List[Dict[str, Any]]:
     order_list = []
-    orders: QuerySet[Order] = OrderOrder.objects.filter(user__username=username)
+    orders: QuerySet[Order] = Order.objects.filter(user__username=username)
     for order in orders:
         order_info = {
             "userId": int(order.order_id),

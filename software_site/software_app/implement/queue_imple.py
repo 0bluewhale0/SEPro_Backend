@@ -80,9 +80,9 @@ def info_api(context: RequestContext, req: HttpRequest) -> JsonResponse:
         'code': RetCode.SUCCESS.value,
         'message': 'success',
         'data': {
-            'charge_id': request_id,
-            'queue_len': position,
-            'cur_state': cur_state,
+            'chargeId': request_id,
+            'queueLen': position,
+            'curState': cur_state,
             'place': str(place)
         }
     })

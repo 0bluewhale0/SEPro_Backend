@@ -10,7 +10,7 @@ from software_app.service.exceptions import UserAlreadyExisted, UserDoesNotExist
 from software_app.service.jwt_tools import Role, gen_token
 from software_app.service.schd import Scheduler, scheduler
 from software_app.config import CONFIG
-
+from software_app.service.exceptions import WrongPassword
 def register(username: str, password: str, key: str) -> None:
     """注册
 
@@ -29,7 +29,7 @@ def register(username: str, password: str, key: str) -> None:
     if registered:
         raise UserAlreadyExisted("用户名已被注册")
     hashed_password = hashlib.md5(password.encode('utf-8')).hexdigest()
-    if key in CONFIG['AuthCode']: # 注册为管理员
+    if key is not None and key in CONFIG['AuthCode']: # 注册为管理员
         user = User(username=username, password=hashed_password, is_admin=True)
     else: # 注册为普通用户
         user = User(username=username, password=hashed_password, is_admin=False)

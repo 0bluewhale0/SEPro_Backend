@@ -12,7 +12,7 @@ from software_app.service.jwt_tools import RequestContext, preprocess_token, Rol
 from software_app.service.exceptions import UserAlreadyExisted, UserDoesNotExisted
 from software_app.service.auth import register, login
 from software_app.service.timemock import get_datetime_now, get_timestamp_now
-
+from software_app.service.exceptions import WrongPassword
 # /register 注册发送的json格式
 __register_schema__ = {
     'type': 'object',
@@ -78,7 +78,10 @@ def register_api(req: HttpRequest) -> JsonResponse:
         })
     username = loads['username']
     password = loads['password']
-    key = loads['key']
+    if 'key' in loads:
+        key = loads['key']
+    else:
+        key = None
     try:
         register(username, password, key)
     except UserAlreadyExisted as e:

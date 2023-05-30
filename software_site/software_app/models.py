@@ -24,6 +24,8 @@ class PileType(models.IntegerChoices):
     """
     CHARGE = 0  # 普通充电桩
     FAST_CHARGE = 1  # 快充充电桩
+    # T = 0  # 普通充电桩
+    # F = 1  # 快充充电桩
 
 
 class Pile(models.Model):

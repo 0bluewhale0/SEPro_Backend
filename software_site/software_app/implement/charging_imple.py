@@ -53,6 +53,7 @@ def request_api(context: RequestContext, req: HttpRequest) -> JsonResponse:  # �
     try:
         kwargs = validate(req, schema=__register_schema__)
     except ValidationError as e:
+        print(req.body)
         return JsonResponse({
             'code': RetCode.FAIL.value,
             'message': str(e),
@@ -106,33 +107,33 @@ def submit_api(context: RequestContext, req: HttpRequest) -> JsonResponse:  # �
         request_id = scheduler.get_request_id_by_username(context.username)
         order: Order = scheduler.end_request(request_id, return_order=True)
     except MappingNotExisted as e:
-        #判断是否充电结束
-        order  = scheduler.checkCache(context.username)
-        if order is not None:
-            return JsonResponse({
-                'code': RetCode.SUCCESS.value,
-                'message': 'success',
-                "data": {
-                    "userId": int(order.user_id),
-                    "orderId": str(order.order_id),
-                    "createTime": str(order.create_time),
-                    "chargingPileId": str(order.pile_id),
-                    "volume": round(order.charged_amount, 2),
-                    "chargingTime": order.charged_time,
-                    "startTime": str(order.begin_time),
-                    "endTime": str(order.end_time),
-                    "chargingFee": round(order.charging_cost, 2),
-                    "serviceFee": round(order.service_cost, 2),
-                    "totalFee": round(order.total_cost, 2),
-                    "time": str(get_timestamp_now())
-                }
-            })
-        else:
-            return JsonResponse({
-                'code': RetCode.FAIL.value,
-                'message': str(e),
-                "data": {}
-            })
+        return JsonResponse({
+            'code': RetCode.FAIL.value,
+            'message': str(e),
+            "data": {}
+        })
+        # #判断是否充电结束
+        # order  = scheduler.checkCache(context.username)
+        # if order is not None:
+        #     return JsonResponse({
+        #         'code': RetCode.SUCCESS.value,
+        #         'message': 'success',
+        #         "data": {
+        #             "userId": int(order.user_id),
+        #             "orderId": str(order.order_id),
+        #             "createTime": str(order.create_time),
+        #             "chargingPileId": str(order.pile_id),
+        #             "volume": round(order.charged_amount, 2),
+        #             "chargingTime": order.charged_time,
+        #             "startTime": str(order.begin_time),
+        #             "endTime": str(order.end_time),
+        #             "chargingFee": round(order.charging_cost, 2),
+        #             "serviceFee": round(order.service_cost, 2),
+        #             "totalFee": round(order.total_cost, 2),
+        #             "time": str(get_timestamp_now())
+        #         }
+        #     })
+
 
     return JsonResponse({
         'code': RetCode.SUCCESS.value,
@@ -169,21 +170,21 @@ def remainAmount_api(context: RequestContext, req: HttpRequest) -> JsonResponse:
         request_id = scheduler.get_request_id_by_username(context.username)
         left_amount = scheduler.query_left_amount(request_id)
     except MappingNotExisted as e:
-        order = scheduler.checkCache(context.username)
-        if order is not None:
-            return JsonResponse({
-                'code': RetCode.SUCCESS.value,
-                'message': 'success',
-                "data": {
-                    "amount": 0.0
-                }
-            })
-        else:
-            return JsonResponse({
-                'code': RetCode.FAIL.value,
-                'message': str(e),
-                "data": {}
-            })
+        # order = scheduler.checkCache(context.username)
+        # if order is not None:
+        #     return JsonResponse({
+        #         'code': RetCode.SUCCESS.value,
+        #         'message': 'success',
+        #         "data": {
+        #             "amount": 0.0
+        #         }
+        #     })
+        # else:
+        return JsonResponse({
+            'code': RetCode.FAIL.value,
+            'message': str(e),
+            "data": {}
+        })
 
     return JsonResponse({
         'code': RetCode.SUCCESS.value,
