@@ -1,5 +1,4 @@
 from django.db import models
-
 # Create your models here.
 # 这里是copy的别人的数据库结构，可能还要改，改完记得删除这个注释
 class User(models.Model):
@@ -24,14 +23,12 @@ class PileType(models.IntegerChoices):
     """
     CHARGE = 0  # 普通充电桩
     FAST_CHARGE = 1  # 快充充电桩
-    # T = 0  # 普通充电桩
-    # F = 1  # 快充充电桩
 
 
 class Pile(models.Model):
     """充电桩ORM模型
     """
-    pile_id = models.BigAutoField(primary_key=True, unique=True, blank=False)
+    pile_id = models.IntegerField(primary_key=True, unique=True, blank=False)
     status = models.IntegerField(choices=PileStatus.choices)
     pile_type = models.IntegerField(choices=PileType.choices)
     register_time = models.DateField(blank=False)
@@ -44,8 +41,8 @@ class Order(models.Model):
     """订单ORM模型
     """
     order_id = models.BigAutoField(primary_key=True, unique=True, blank=False)
-    user = models.ForeignKey(to=User, on_delete=models.DO_NOTHING, blank=False)
-    pile = models.ForeignKey(to=Pile, on_delete=models.DO_NOTHING, blank=False)
+    user = models.ForeignKey(to=User, on_delete=models.CASCADE, blank=False)
+    pile = models.ForeignKey(to=Pile, on_delete=models.CASCADE, blank=False)
     create_time = models.DateTimeField(blank=False)
     begin_time = models.DateTimeField(blank=False)
     end_time = models.DateTimeField(blank=False)
@@ -54,3 +51,4 @@ class Order(models.Model):
     total_cost = models.DecimalField(max_digits=5, decimal_places=2, blank=False)
     charged_amount = models.DecimalField(max_digits=6, decimal_places=2, blank=False)
     charged_time = models.IntegerField(blank=False)
+

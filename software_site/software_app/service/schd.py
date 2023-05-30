@@ -20,11 +20,11 @@ from software_app.service.exceptions import AlreadyRequested, IllegalUpdateAttem
 
 MAX_RECYCLE_ID = 1000
 
-WAITING_AREA_CAPACITY = CONFIG["cfg"]["WaitingAreaSize"]
-WAITING_QUEUE_CAPACITY = CONFIG["cfg"]["ChargingQueueLen"]
+WAITING_AREA_CAPACITY = CONFIG["cfg"]["WaitingAreaSize"] # 等待区容量
+WAITING_QUEUE_CAPACITY = CONFIG["cfg"]["ChargingQueueLen"] # 充电队列容量
 
-NORMAL_PILE_POWER = 10.00
-FAST_CHARGE_PILE_POWER = 30.00
+NORMAL_PILE_POWER = 10.00 # 普通充电桩功率
+FAST_CHARGE_PILE_POWER = 30.00 # 快充充电桩功率
 
 
 class _RequestIdAllocator:
@@ -108,7 +108,7 @@ class PileScheduler:
     def get_used_size(self) -> int:
         return len(self.__waiting_queue)
 
-    def estimate_time(self) -> int:
+    def estimate_time(self) -> int: # 计算整个waiting队列中的预估充电时长，调用发生在调度时
         total_cost = 0
         for request in self.__waiting_queue.values():
             if request.request_type == PileType.CHARGE:
@@ -225,6 +225,9 @@ class Scheduler:
         queue[1] += 1
 
     def __find_fastest_spare_pile(self, request_type: PileType) -> int:
+        """
+        寻找最快的空闲充电桩
+        """
         fastest_pile = None
         shortest_time = float('inf')
         for pile_id, pile_scheduler in self.__pile_schedulers.items():
@@ -251,15 +254,18 @@ class Scheduler:
     def __try_schedule(self) -> None:
         def schedule_on_type(pile_type: PileType) -> None:
             while True:
+                # 检查是否有空闲充电桩
                 target_pile = self.__find_fastest_spare_pile(pile_type)
                 if target_pile is None:
                     return
-                waiting_area_queue = self.__waiting_areas[pile_type]
+                # 将原本的等待区按照充电类型划分，并检查等候区是否有请求
+                waiting_area_queue = self.__waiting_areas[pile_type] #元组，第一个元素为等待区队列，第二个元素为队列长度
                 request = Scheduler.__pop_queue(waiting_area_queue)
                 if request is None:
                     return
                 request.is_in_waiting_queue = True
                 request.pile_id = target_pile
+                # 将请求加入到目标充电桩的等待队列中
                 self.__pile_schedulers[target_pile].push_to_queue(request)
                 debug("[scheduler] request %d has been moved into queue of pile %d",
                       request.request_id, request.pile_id)

@@ -12,6 +12,8 @@
     },
     "AuthCode":["asfdghkj"],
     "cfg": {
+      "//":"ForceApplyChange说明：是否强制应用变更，如果为true，则每次启动都会应用变更，否则只有在基础设置为空的时候会应用变更",
+      "ForceApplyChange":false,
       "FastChargingPileNum": 3,
       "TrickleChargingPileNum": 2,
       "WaitingAreaSize": 6,
