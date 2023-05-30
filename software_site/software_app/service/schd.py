@@ -20,11 +20,11 @@ from software_app.service.exceptions import AlreadyRequested, IllegalUpdateAttem
 
 MAX_RECYCLE_ID = 1000
 
-WAITING_AREA_CAPACITY = CONFIG["cfg"]["WaitingAreaSize"]
-WAITING_QUEUE_CAPACITY = CONFIG["cfg"]["ChargingQueueLen"]
+WAITING_AREA_CAPACITY = CONFIG["cfg"]["WaitingAreaSize"] # 等待区容量
+WAITING_QUEUE_CAPACITY = CONFIG["cfg"]["ChargingQueueLen"] # 充电队列容量
 
-NORMAL_PILE_POWER = 10.00
-FAST_CHARGE_PILE_POWER = 30.00
+NORMAL_PILE_POWER = 10.00 # 普通充电桩功率
+FAST_CHARGE_PILE_POWER = 30.00 # 快充充电桩功率
 
 
 class _RequestIdAllocator:
@@ -109,7 +109,7 @@ class PileScheduler:
     def get_used_size(self) -> int:
         return len(self.__waiting_queue)
 
-    def estimate_time(self) -> int:
+    def estimate_time(self) -> int: # 计算整个waiting队列中的预估充电时长，调用发生在调度时
         total_cost = 0
         for request in self.__waiting_queue.values():
             if request.request_type == PileType.CHARGE:
@@ -190,7 +190,7 @@ class Scheduler:
         self.__lock = Lock()
         self.__check_lock = Lock()
         self.__pile_schedulers: Dict[int, PileScheduler] = {}
-        self.__waiting_area_map: Dict[int, _ChargingRequest] = {}
+        self.__requests_map: Dict[int, _ChargingRequest] = {}
         self.__username_to_request_id: Dict[str, int] = {}
         self.__scheduling_mode = SchedulingMode.NORMAL
         self.__broken_pile_id: int = None
@@ -226,6 +226,9 @@ class Scheduler:
         queue[1] += 1
 
     def __find_fastest_spare_pile(self, request_type: PileType) -> int:
+        """
+        寻找最快的空闲充电桩
+        """
         fastest_pile = None
         shortest_time = float('inf')
         for pile_id, pile_scheduler in self.__pile_schedulers.items():
@@ -243,6 +246,9 @@ class Scheduler:
         return fastest_pile
 
     def checkCache(self,name:str) -> None|Order:
+        """
+        检查缓存中是否有该用户的订单
+        """
         if name in self.__cache:
             order : Order = self.__cache[name]
             self.__cache.pop(name)
@@ -252,15 +258,18 @@ class Scheduler:
     def __try_schedule(self) -> None:
         def schedule_on_type(pile_type: PileType) -> None:
             while True:
+                # 检查是否有空闲充电桩
                 target_pile = self.__find_fastest_spare_pile(pile_type)
                 if target_pile is None:
                     return
-                waiting_area_queue = self.__waiting_areas[pile_type]
+                # 将原本的等待区按照充电类型划分，并检查等候区是否有请求
+                waiting_area_queue = self.__waiting_areas[pile_type] #元组，第一个元素为等待区队列，第二个元素为队列长度
                 request = Scheduler.__pop_queue(waiting_area_queue)
                 if request is None:
                     return
                 request.is_in_waiting_queue = True
                 request.pile_id = target_pile
+                # 将请求加入到目标充电桩的等待队列中
                 self.__pile_schedulers[target_pile].push_to_queue(request)
                 debug("[scheduler] request %d has been moved into queue of pile %d",
                       request.request_id, request.pile_id)
@@ -324,7 +333,7 @@ class Scheduler:
 
     def end_request(self, request_id: int, return_order: bool = False) -> None | Order:
         with self.__lock:
-            request = self.__waiting_area_map.pop(request_id)
+            request = self.__requests_map.pop(request_id)
             request.is_removed = True
             self.__id_allocator.dealloc(request_id)
             del self.__username_to_request_id[request.username]
@@ -360,7 +369,7 @@ class Scheduler:
 
     def update_request(self, request_id: int, amount: Decimal, request_type: PileType) -> None:
         with self.__lock:
-            request = self.__waiting_area_map[request_id]
+            request = self.__requests_map[request_id]
             if request.is_in_waiting_queue:
                 raise IllegalUpdateAttemption("不允许在充电区更新请求")
 
@@ -402,7 +411,7 @@ class Scheduler:
 
             request.requeue_flag = requeue
 
-            self.__waiting_area_map[request_id] = request
+            self.__requests_map[request_id] = request
             self.__username_to_request_id[username] = request_id
             Scheduler.__push_queue(waiting_queue, request)
 
@@ -413,7 +422,7 @@ class Scheduler:
 
     def get_request_status(self, request_id: int) -> RequestStatus:
         with self.__lock:
-            request = self.__waiting_area_map[request_id]
+            request = self.__requests_map[request_id]
             if request.is_removed:
                 return RequestStatus(StatusType.NOTCHARGING, -1, None)
             if request.is_executing:
@@ -516,7 +525,7 @@ class Scheduler:
 
     def snapshot(self) -> List[Dict[str, Any]]:
         request_list = []
-        for request in self.__waiting_area_map.values():
+        for request in self.__requests_map.values():
             request_info = {
                 'chargingPileId': request.pile_id,
                 'username': request.username,
@@ -529,8 +538,8 @@ class Scheduler:
 
     def query_left_amount(self, request_id) -> Decimal:
         with self.__lock:
-            if request_id in self.__waiting_area_map:
-                cur_request = self.__waiting_area_map[request_id]
+            if request_id in self.__requests_map:
+                cur_request = self.__requests_map[request_id]
                 if cur_request.is_executing:
                     peried = (get_datetime_now() - cur_request.begin_time).total_seconds() / 3600
                     if cur_request.request_type == PileType.CHARGE:  # 普通充电桩

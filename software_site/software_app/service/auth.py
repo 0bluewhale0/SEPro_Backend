@@ -5,11 +5,12 @@ from typing import Tuple
 
 from django.core.exceptions import ObjectDoesNotExist
 
-from software_app.models import User
-from software_app.service.exceptions import UserAlreadyExisted, UserDoesNotExisted
+from software_app.models import User, Pile, PileStatus, PileType
+from software_app.service.exceptions import UserAlreadyExisted, UserDoesNotExisted, WrongPassword
 from software_app.service.jwt_tools import Role, gen_token
 from software_app.service.schd import Scheduler, scheduler
 from software_app.config import CONFIG
+from datetime import date
 
 def register(username: str, password: str, key: str) -> None:
     """注册
@@ -61,3 +62,29 @@ def login(username: str, password: str) -> Tuple[str, Role]:
     if user.is_admin:
         role = Role.ADMIN
     return gen_token(username, role.name), role
+
+
+def init_pileModels() -> None:
+    if CONFIG['cfg']['ForceApplyChange']==False:
+        piles = Pile.objects.all()
+        if len(piles) != 0: # pile数据库已经被初始化过了
+            return
+    else:
+        
+        TorF = input("是否强制应用Pile数据库更改？(y/n)")
+        if TorF != 'y':
+            return
+    Pile.objects.all().delete()
+    # pile数据库中没有数据，需要根据config文件去创建充电桩
+    FastChargingPileNum = CONFIG['cfg']['FastChargingPileNum']
+    TrickleChargingPileNum = CONFIG['cfg']['TrickleChargingPileNum']
+    for i in range(FastChargingPileNum):
+        Fpile = Pile.objects.create(pile_id = i+1, status=PileStatus.RUNNING, pile_type=PileType.FAST_CHARGE, register_time=date.today(), cumulative_charging_amount=0)
+        Fpile.save()
+    for i in range(TrickleChargingPileNum):
+        Tpile = Pile.objects.create(pile_id = FastChargingPileNum+i+1, status=PileStatus.RUNNING, pile_type=PileType.CHARGE, register_time=date.today(), cumulative_charging_amount=0)
+        Tpile.save()
+    
+
+if __name__=="main":...
+    # init_pileModels()
