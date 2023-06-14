@@ -53,7 +53,7 @@ def request_api(context: RequestContext, req: HttpRequest) -> JsonResponse:  # å
     try:
         kwargs = validate(req, schema=__register_schema__)
     except ValidationError as e:
-        print(req.body)
+        print(type(req.body['params']['chargingMode']))
         return JsonResponse({
             'code': RetCode.FAIL.value,
             'message': str(e),

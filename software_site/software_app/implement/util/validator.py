@@ -19,8 +19,10 @@ def validate(request: HttpRequest, method: str = 'POST', schema: Dict = None) ->
         return
     if schema is None:
         return
+    print("1232132123", request.body)
     try:
         req = json.loads(request.body)
+        print("req", req)
         _validate(req, schema)
     except JSONDecodeError as e:
         raise ValidationError("请求解析错误") from e

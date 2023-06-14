@@ -32,7 +32,6 @@ __register_schema__ = {
         },
         'key': {
             'type': 'string',
-            'minLength': 8,
             'maxLength': 32,
             'errmsg': "key 应为字符串(8~32)"
         }
@@ -56,20 +55,16 @@ __login_schema__ = {
             'minLength': 8,
             'maxLength': 32,
             'errmsg': "password 应为字符串(8~32)"
-        },
-        'key': {
-            'type': 'string',
-            'minLength': 8,
-            'maxLength': 32,
-            'errmsg': "key 应为字符串(8~32)"
         }
     }
 }
 
 
 def register_api(req: HttpRequest) -> JsonResponse:
+    print("enter register_api")
     try:
         loads = validate(req, schema=__register_schema__)
+        print(loads)
     except ValidationError as e:
         return JsonResponse({
             'code': RetCode.FAIL.value,
@@ -80,6 +75,8 @@ def register_api(req: HttpRequest) -> JsonResponse:
     password = loads['password']
     if 'key' in loads:
         key = loads['key']
+        if key=="":
+            key=None
     else:
         key = None
     try:

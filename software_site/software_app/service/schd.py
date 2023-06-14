@@ -23,7 +23,8 @@ MAX_RECYCLE_ID = 1000
 WAITING_AREA_CAPACITY = CONFIG["cfg"]["WaitingAreaSize"] # 等待区容量
 WAITING_QUEUE_CAPACITY = CONFIG["cfg"]["ChargingQueueLen"] # 充电队列容量
 
-NORMAL_PILE_POWER = 10.00 # 普通充电桩功率
+# NORMAL_PILE_POWER = 10.00 # 普通充电桩功率
+NORMAL_PILE_POWER = 7.00 # 普通充电桩功率
 FAST_CHARGE_PILE_POWER = 30.00 # 快充充电桩功率
 
 
@@ -289,6 +290,10 @@ class Scheduler:
                     debug("[recovery] recovery queue is empty now. resume scheduling.")
                     self.__scheduling_mode = SchedulingMode.NORMAL
                     skip_types.clear()  # 清空 恢复正常调度
+            if len(self.__recovery_queue) == 0:  # 故障队列调度完成
+                debug("[recovery] recovery queue is empty now. resume scheduling.")
+                self.__scheduling_mode = SchedulingMode.NORMAL
+                skip_types.clear()  # 清空 恢复正常调度
 
         # 对未被故障影响的充电桩进行调度
         schedule_on_type(PileType.CHARGE)
@@ -330,21 +335,23 @@ class Scheduler:
 
     def end_request(self, request_id: int, return_order: bool = False) -> None | Order:
         with self.__lock:
-            request = self.__requests_map.pop(request_id)
-            request.is_removed = True
-            self.__id_allocator.dealloc(request_id)
-            del self.__username_to_request_id[request.username]
+            if request.fail_flag ==False:
+                request = self.__requests_map.pop(request_id)
+                request.is_removed = True
+                self.__id_allocator.dealloc(request_id)
+                del self.__username_to_request_id[request.username]
 
-            #如果是在等候区，直接删除
-            if not request.is_in_waiting_queue:
-                self.__waiting_areas[request.request_type][1] -= 1
-                return
+                #如果是在等候区，直接删除
+                if not request.is_in_waiting_queue:
+                    self.__waiting_areas[request.request_type][1] -= 1
+                    return
 
-            # 如果是在充电区，从充电区删除
-            pile_id = request.pile_id
-            pile_scheduler = self.__pile_schedulers[pile_id]
-            pile_scheduler.remove(request_id)
-
+                # 如果是在充电区，从充电区删除
+                pile_id = request.pile_id
+                pile_scheduler = self.__pile_schedulers[pile_id]
+                pile_scheduler.remove(request_id)
+            else:
+                request.is_removed = False
             if request.is_executing:
                 if not self.__check_if_completed(request):
                     debug("[scheduler] request %d is cancelled while executing.",
@@ -379,12 +386,12 @@ class Scheduler:
                 return
 
             # 修改了模式
-            self.end_request(request_id)  # 取消请求
-            self.submit_request(request_type,  # 重新请求
-                                request.username,
-                                amount,
-                                request.battery_capacity,
-                                requeue=True)
+        self.end_request(request_id)  # 取消请求
+        self.submit_request(request_type,  # 重新请求
+                            request.username,
+                            amount,
+                            request.battery_capacity,
+                            requeue=True)
 
     def submit_request(self, request_mode: PileType,
                        username: str,
@@ -545,9 +552,9 @@ class Scheduler:
                 if cur_request.is_executing:
                     peried = (get_datetime_now() - cur_request.begin_time).total_seconds() / 3600
                     if cur_request.request_type == PileType.CHARGE:  # 普通充电桩
-                        res = cur_request.battery_capacity - Decimal.from_float(peried * NORMAL_PILE_POWER)
+                        res = cur_request.amount - Decimal.from_float(peried * NORMAL_PILE_POWER)
                     else:  # 快速充电桩
-                        res = cur_request.battery_capacity - Decimal.from_float(peried * FAST_CHARGE_PILE_POWER)
+                        res = cur_request.amount - Decimal.from_float(peried * FAST_CHARGE_PILE_POWER)
                 else:
                     res = cur_request.battery_capacity
             res = max(res, 0.0)
