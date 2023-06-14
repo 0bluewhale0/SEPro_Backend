@@ -4,7 +4,7 @@ import time
 from datetime import datetime
 
 
-FAST_FORWARD_RATE = 60
+FAST_FORWARD_RATE = 30
 
 __boot_datetime = datetime.now()
 __boot_timestamp = round(time.time())

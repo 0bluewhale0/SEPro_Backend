@@ -257,7 +257,9 @@ class Scheduler:
             while True:
                 # 检查是否有空闲充电桩
                 target_pile = self.__find_fastest_spare_pile(pile_type)
+                # breakpoint()
                 if target_pile is None:
+                    print("myERROR!target_pile is None")
                     return
                 # 将原本的等待区按照充电类型划分，并检查等候区是否有请求
                 waiting_area_queue = self.__waiting_areas[pile_type] #元组，第一个元素为等待区队列，第二个元素为队列长度
@@ -335,6 +337,7 @@ class Scheduler:
 
     def end_request(self, request_id: int, return_order: bool = False) -> None | Order:
         with self.__lock:
+            request = self.__requests_map[request_id]
             if request.fail_flag ==False:
                 request = self.__requests_map.pop(request_id)
                 request.is_removed = True
@@ -361,7 +364,7 @@ class Scheduler:
                 end_time=get_datetime_now()
                 power = NORMAL_PILE_POWER if request.request_type == PileType.CHARGE else FAST_CHARGE_PILE_POWER
                 real_amount = (end_time - request.begin_time).total_seconds() / 3600 * power
-                request.amount = min(request.amount, real_amount)
+                request.amount = Decimal(min(request.amount, real_amount))
                 order: Order = create_order(request.request_type,
                                             request.pile_id,
                                             request.username,
