@@ -358,12 +358,16 @@ class Scheduler:
                           request.request_id)
                 # 触发结算流程生成详单
                 debug("[scheduler] request %d created an order.", request_id)
+                end_time=get_datetime_now()
+                power = NORMAL_PILE_POWER if request.request_type == PileType.CHARGE else FAST_CHARGE_PILE_POWER
+                real_amount = (end_time - request.begin_time).total_seconds() / 3600 * power
+                request.amount = min(request.amount, real_amount)
                 order: Order = create_order(request.request_type,
                                             request.pile_id,
                                             request.username,
                                             request.amount,
-                                            request.create_time,
-                                            end_time=get_datetime_now(),
+                                            request.begin_time,
+                                            end_time,
                                             returned_order=True)
                 # self.__cache[request.username] = order
             else:
