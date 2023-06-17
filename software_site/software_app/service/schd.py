@@ -14,7 +14,7 @@ from django.db.models import QuerySet
 
 from software_app.models import Pile, PileType, Order
 from software_app.service.charge import create_order
-from software_app.service.timemock import get_datetime_now
+from software_app.service.timemock import get_datetime_now,check_time
 from software_app.service.exceptions import AlreadyRequested, IllegalUpdateAttemption, MappingNotExisted, \
     OutOfRecycleResource, OutOfSpace
 
@@ -325,6 +325,7 @@ class Scheduler:
     def __check_proc(self) -> None:
         while True:
             with self.__check_lock:
+                check_time(get_datetime_now())
                 for _scheduler in self.__pile_schedulers.values():
                     with self.__lock:
                         executing_request = _scheduler.get_executing_request()
@@ -336,6 +337,14 @@ class Scheduler:
                         executing_request.is_removed = True
                         # self.end_request(executing_request.request_id)
             sleep(1)
+
+
+    def calc_real_amount(self, request, end_time) -> Decimal:
+        print(request)
+        power = NORMAL_PILE_POWER if request.request_type == PileType.CHARGE else FAST_CHARGE_PILE_POWER
+        real_amount = (end_time - request.begin_time).total_seconds() / 3600 * power
+        return Decimal(min(request.amount, real_amount))
+
 
     def end_request(self, request_id: int, return_order: bool = False) -> None | Order:
         with self.__lock:
@@ -369,10 +378,7 @@ class Scheduler:
 
                 #计算实际充电量
                 end_time=get_datetime_now()
-                power = NORMAL_PILE_POWER if request.request_type == PileType.CHARGE else FAST_CHARGE_PILE_POWER
-                real_amount = (end_time - request.begin_time).total_seconds() / 3600 * power
-                real_amount = Decimal(min(request.amount, real_amount))
-
+                real_amount = self.calc_real_amount(request, end_time)
                 #针对充电桩故障的情况，需要重新排队并计算剩余电量
                 if request.fail_flag == True:
                     request.amount =  Decimal(max(request.amount - real_amount,0))
@@ -565,8 +571,13 @@ class Scheduler:
                 'waitingTime': (get_datetime_now() - request.create_time).seconds
             }
             request_list.append(request_info)
-        # breakpoint()
         return request_list
+    
+
+    def test_snapshot(self) -> List[_ChargingRequest]:
+        return self.__requests_map.values()
+
+
 
     def query_left_amount(self, request_id) -> Decimal:
         with self.__lock:
