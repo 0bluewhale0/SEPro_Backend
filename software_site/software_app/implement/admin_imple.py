@@ -106,7 +106,7 @@ def query_all_piles_stat_api(_: RequestContext, req: HttpRequest) -> JsonRespons
         validate(req, method='GET')
     except ValidationError as e:
         return JsonResponse({
-            'code': RetCode.FAIL.value,
+            'code': RetCode.FAIL.value, 
             'message': str(e),
             'data':{}
         })
