@@ -61,16 +61,16 @@ def calc_cost(begin_time: datetime,
     current_time = begin_time
     current_interval = WHICH_INTERVAL[begin_time.hour]          # 开始时间所属区间
     end_interval = WHICH_INTERVAL[end_time.hour]                # 结束时间所属区间
-    print(datetime.now(), '开始时间所属区间', current_interval, sep='\t')
-    print(datetime.now(), '结束时间所属区间', end_interval, sep='\t')
+    print('[check]', '开始时间所属区间', current_interval, sep='\t')
+    print('[check]', '结束时间所属区间', end_interval, sep='\t')
     # 当起始和结束不在同一天的同一区间时
     while not ((end_time - current_time).days == 0 and end_interval == current_interval):
-        print(datetime.now(), '当前时间所属区间', current_interval, sep='\t')
-        print(datetime.now(), 'current_time', current_time, sep='\t')
+        print('[check]', '当前时间所属区间', current_interval, sep='\t')
+        print('[check]', 'current_time', current_time, sep='\t')
 
         current_interval_type = WHICH_TYPE[current_interval]    # 获取当前区间的类型
 
-        print(datetime.now(), '当前时间所属区间类型', current_interval_type, sep='\t')
+        print('[check]', '当前时间所属区间类型', current_interval_type, sep='\t')
 
         next_interval_time = datetime(current_time.year,
                                       current_time.month,
@@ -88,31 +88,31 @@ def calc_cost(begin_time: datetime,
             next_interval_time - current_time).seconds  # 累计时间差
         current_time = next_interval_time
 
-    print(datetime.now(), 'current_time', current_time, sep='\t')
-    print(datetime.now(), 'end_time', end_time, sep='\t')
+    print('[check]', 'current_time', current_time, sep='\t')
+    print('[check]', 'end_time', end_time, sep='\t')
     # 累计同一天同一区间内当前时刻到结束的时间
     current_interval_type = WHICH_TYPE[current_interval]
     intervals_time_cnt[current_interval_type] += (
         end_time - current_time).seconds
-    print(datetime.now(), 'intervals_time_cnt', intervals_time_cnt, sep='\t')
+    print('[check]', 'intervals_time_cnt', intervals_time_cnt, sep='\t')
     # 按照与时间的正比例关系计算各个区间的充电度数
     # 充电费 = 单位电价 * 充电度数
     intervals_time_sum = sum(intervals_time_cnt)
-    print(datetime.now(), 'intervals_time_sum', intervals_time_sum, sep='\t')
+    print('[check]', 'intervals_time_sum', intervals_time_sum, sep='\t')
     intervals_charging_cost[TOP] = amount * CHARGING_COST_PER_KWH_TOP * \
         intervals_time_cnt[TOP] / intervals_time_sum
     intervals_charging_cost[MEDIUM] = amount * CHARGING_COST_PER_KWH_MEDIUM * \
         intervals_time_cnt[MEDIUM] / intervals_time_sum
     intervals_charging_cost[BOTTOM] = amount * CHARGING_COST_PER_KWH_BOTTOM * \
         intervals_time_cnt[BOTTOM] / intervals_time_sum
-    print(datetime.now(), 'intervals_charging_cost',
+    print('[check]', 'intervals_charging_cost',
           intervals_charging_cost, sep='\t')
     charging_cost = sum(intervals_charging_cost)
     # 服务费 = 服务费单价 * 充电度数
     service_cost = SERVICE_COST_PER_KWH * amount
     # 总费用 = 充电费 + 服务费
-    print(datetime.now(), 'charging_cost', charging_cost, sep='\t')
-    print(datetime.now(), 'service_cost', service_cost, sep='\t')
+    print('[check]', 'charging_cost', charging_cost, sep='\t')
+    print('[check]', 'service_cost', service_cost, sep='\t')
     charging_cost = Decimal(charging_cost).quantize(Decimal('0.00'))
     service_cost = Decimal(service_cost).quantize(Decimal('0.00'))
     return charging_cost + service_cost, charging_cost, service_cost
@@ -142,7 +142,7 @@ def create_order(request_type: PileType,
     costs = calc_cost(begin_time=begin_time, end_time=end_time, amount=amount)
     order = Order()
     # order.request_type = request_type
-    order.pile_id = pile_id
+    order.pile = pile_id
     order.begin_time = begin_time
     order.end_time = end_time
     order.create_time = get_datetime_now()
@@ -154,7 +154,7 @@ def create_order(request_type: PileType,
     # 需要注意详单内有外键 pile 和 user，这里传入的是username，需要设置为user_id
     # 查找 User
     user: User = User.objects.get(username=username)
-    order.user_id = user.user_id
+    order.user = user.user_id
     # 保存数据至数据库
     order.save()
     debug("order created.")  # debug
@@ -175,44 +175,44 @@ if __name__ == '__main__':
     begin = datetime(2022, 6, 6, 7, 0, 0)
     end = datetime(2022, 6, 6, 10, 0, 0)
     amount = 10
-    print(datetime.now(), 'Expected Answer of Test-01', '15.00', sep='\t')
+    print(get_datetime_now(), 'Expected Answer of Test-01', '15.00', sep='\t')
     if calc_cost(begin, end, amount) == Decimal(15.00):
-        print(datetime.now(), 'Pass Test-01 ✔', sep='\t')
+        print(get_datetime_now(), 'Pass Test-01 ✔', sep='\t')
     else:
-        print(datetime.now(), 'Pass Test-01 ✘', sep='\t')
+        print(get_datetime_now(), 'Pass Test-01 ✘', sep='\t')
     print()
 
     # Test-02
     begin = datetime(2022, 6, 6, 21, 0, 0)
     end = datetime(2022, 6, 7, 0, 0)
     amount = 30
-    print(datetime.now(), 'Expected Answer of Test-02', '42.00', sep='\t')
+    print(get_datetime_now(), 'Expected Answer of Test-02', '42.00', sep='\t')
     if calc_cost(begin, end, amount) == Decimal(42.00).quantize(Decimal('0.00')):
-        print(datetime.now(), 'Pass Test-02 ✔', sep='\t')
+        print(get_datetime_now(), 'Pass Test-02 ✔', sep='\t')
     else:
-        print(datetime.now(), 'Pass Test-02 ✘', sep='\t')
+        print(get_datetime_now(), 'Pass Test-02 ✘', sep='\t')
     print()
 
     # Test-03
     begin = datetime(2022, 6, 6, 21, 0, 0)
     end = datetime(2022, 6, 7, 21, 0, 0)
     amount = 30
-    print(datetime.now(), 'Expected Answer of Test-03', '42.00', sep='\t')
+    print(get_datetime_now(), 'Expected Answer of Test-03', '42.00', sep='\t')
     if calc_cost(begin, end, amount) == Decimal(45.00).quantize(Decimal('0.00')):
-        print(datetime.now(), 'Pass Test-03 ✔', sep='\t')
+        print(get_datetime_now(), 'Pass Test-03 ✔', sep='\t')
     else:
-        print(datetime.now(), 'Pass Test-03 ✘', sep='\t')
+        print(get_datetime_now(), 'Pass Test-03 ✘', sep='\t')
     print()
 
     # Test-04
     begin = datetime(2022, 6, 6, 21, 0, 0)
     end = datetime(2022, 6, 8, 0, 0, 0)
     amount = 30
-    print(datetime.now(), 'Expected Answer of Test-04', '44.67', sep='\t')
+    print(get_datetime_now(), 'Expected Answer of Test-04', '44.67', sep='\t')
     if calc_cost(begin, end, amount) == Decimal(44.67).quantize(Decimal('0.00')):
-        print(datetime.now(), 'Pass Test-04 ✔', sep='\t')
+        print(get_datetime_now(), 'Pass Test-04 ✔', sep='\t')
     else:
-        print(datetime.now(), 'Pass Test-04 ✘', sep='\t')
+        print(get_datetime_now(), 'Pass Test-04 ✘', sep='\t')
     print()
 
     # create_order-Tests

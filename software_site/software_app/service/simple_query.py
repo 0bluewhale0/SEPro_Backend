@@ -17,7 +17,7 @@ def get_all_orders(username: str) -> List[Dict[str, Any]]:
     orders: QuerySet[Order] = Order.objects.filter(user__username=username)
     for order in orders:
         order_info = {
-            "userId": int(order.order_id),
+            "userId": int(order.user_id),
             "orderId": str(order.order_id),
             "createTime":str(order.create_time),
             "chargingPileId": int(order.pile_id),
